@@ -1,0 +1,34 @@
+TestController.java:
+package com.example._24WH1A05V4;
+
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+public class TestController {
+
+    @GetMapping("/test")
+    public String test() {
+        return "24WH1A05V4 - Spring Boot Testing";
+    }
+}
+HelloTest.java:
+package karate;
+
+import com.intuit.karate.junit5.Karate;
+
+class HelloTest {
+
+    @Karate.Test
+    Karate test24WH1A05V4() {
+        return Karate.run("hello").relativeTo(getClass());
+    }
+}
+hello.feature:
+Feature: Spring Boot API Test - 24WH1A05V4
+
+Scenario: Verify test endpoint
+    Given url 'http://localhost:8080'
+    And path 'test'
+    When method get
+    Then status 200
+    And match response == '24WH1A05V4 - Spring Boot Testing'
