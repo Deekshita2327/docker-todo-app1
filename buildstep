@@ -1,0 +1,191 @@
+job1 :
+#!/bin/bash
+
+echo "==============================="
+echo "JOB 1 - GITHUB CODE PULL"
+echo "==============================="
+
+echo "Current directory:"
+pwd
+
+echo "Files pulled from GitHub:"
+ls -la
+
+echo "Git status:"
+git status
+
+echo "==============================="
+echo "JOB 1 COMPLETED"
+echo "==============================="
+
+JOB2:
+#!/bin/bash
+
+echo "==============================="
+echo "JOB 2 - BUILD DOCKER IMAGE"
+echo "==============================="
+
+docker --version
+
+docker build -t todo-app:1.0 .
+
+if [ $? -ne 0 ]; then
+    echo "Docker build failed"
+    exit 1
+fi
+
+echo "Docker image built successfully"
+
+echo "==============================="
+echo "KUBERNETES DEPLOYMENT"
+echo "==============================="
+
+kubectl config current-context
+
+if [ $? -ne 0 ]; then
+    echo "Unable to access Kubernetes"
+    exit 1
+fi
+
+echo "Creating Persistent Volume Claim..."
+
+kubectl apply -f k8s/pvc.yaml
+
+if [ $? -ne 0 ]; then
+    echo "PVC deployment failed"
+    exit 1
+fi
+
+echo "Deploying application..."
+
+kubectl apply -f k8s/deployment.yaml
+
+if [ $? -ne 0 ]; then
+    echo "Deployment failed"
+    exit 1
+fi
+
+echo "Creating service..."
+
+kubectl apply -f k8s/service.yaml
+
+if [ $? -ne 0 ]; then
+    echo "Service creation failed"
+    exit 1
+fi
+
+echo "==============================="
+echo "KUBERNETES STATUS"
+echo "==============================="
+
+kubectl get nodes
+kubectl get pods
+kubectl get services
+kubectl get pvc
+
+echo "==============================="
+echo "JOB 2 COMPLETED"
+echo "==============================="
+
+JOB3:
+#!/bin/bash
+
+echo "==============================="
+echo "JOB 3 - TESTING APPLICATION"
+echo "==============================="
+
+echo "Checking Kubernetes context..."
+
+kubectl config current-context
+
+echo "==============================="
+echo "CHECKING PODS"
+echo "==============================="
+
+kubectl get pods
+
+if [ $? -ne 0 ]; then
+    echo "Unable to get pods"
+    exit 1
+fi
+
+echo "==============================="
+echo "WAITING FOR DEPLOYMENT"
+echo "==============================="
+
+kubectl rollout status deployment/todo-app --timeout=120s
+
+if [ $? -ne 0 ]; then
+    echo "APPLICATION DEPLOYMENT FAILED"
+    exit 1
+fi
+
+echo "==============================="
+echo "CHECKING SERVICE"
+echo "==============================="
+
+kubectl get service todo-service
+
+if [ $? -ne 0 ]; then
+    echo "SERVICE CHECK FAILED"
+    exit 1
+fi
+
+echo "==============================="
+echo "APPLICATION TEST SUCCESSFUL"
+echo "==============================="
+
+JOB4:
+#!/bin/bash
+
+echo "==============================="
+echo "JOB 4 - MONITORING PODS"
+echo "==============================="
+
+echo "Kubernetes context:"
+kubectl config current-context
+
+echo "==============================="
+echo "CHECKING PODS"
+echo "==============================="
+
+kubectl get pods
+
+if [ $? -ne 0 ]; then
+    echo "POD CHECK FAILED"
+    exit 1
+fi
+
+echo "==============================="
+echo "CHECKING DEPLOYMENT"
+echo "==============================="
+
+kubectl get deployment todo-app
+
+if [ $? -ne 0 ]; then
+    echo "DEPLOYMENT CHECK FAILED"
+    exit 1
+fi
+
+echo "==============================="
+echo "CHECKING APPLICATION HEALTH"
+echo "==============================="
+
+kubectl rollout status deployment/todo-app --timeout=60s
+
+if [ $? -ne 0 ]; then
+    echo "==============================="
+    echo "POD/DEPLOYMENT FAILURE"
+    echo "==============================="
+    exit 1
+fi
+
+echo "==============================="
+echo "CHECKING SERVICE"
+echo "==============================="
+
+kubectl get service todo-service
+
+echo "==============================="
+echo "APPLICATION IS HEALTHY"
+echo "==============================="
